@@ -1,9 +1,15 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { DM_Sans } from "next/font/google"
+import { DM_Sans, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { ReduxProvider } from "@/components/providers/ReduxProvider"
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space-grotesk",
+})
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -23,16 +29,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={dmSans.variable}>
-      <head>
-        <style>{`
-html {
-  font-family: ${dmSans.style.fontFamily};
-  --font-sans: ${dmSans.variable};
-}
-        `}</style>
-      </head>
-      <body className="font-sans antialiased">
+    <html lang="en" className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
+      <body className="font-serif">
         <ReduxProvider>
           <AuthProvider>{children}</AuthProvider>
         </ReduxProvider>

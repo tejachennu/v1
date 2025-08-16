@@ -16,6 +16,7 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { addMessage, setActiveConversation, setTyping, endSession } from "@/store/slices/chatSlice"
 import { MediaMessage } from "@/components/media/MediaMessage"
 import { StatusToggle } from "@/components/agent/StatusToggle"
+import { TicketManagement } from "@/components/agent/TicketManagement"
 import {
   MessageCircle,
   Users,
@@ -31,6 +32,7 @@ import {
   Zap,
   X,
   FileSpreadsheet,
+  Ticket,
 } from "lucide-react"
 import { v4 as uuidv4 } from "uuid"
 
@@ -51,7 +53,7 @@ export const AgentDashboard: React.FC = () => {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-  const [activeTab, setActiveTab] = useState<"live" | "previous">("live")
+  const [activeTab, setActiveTab] = useState<"live" | "previous" | "tickets">("live")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -530,27 +532,31 @@ export const AgentDashboard: React.FC = () => {
             <CardContent className="p-0">
               <Tabs
                 value={activeTab}
-                onValueChange={(value) => setActiveTab(value as "live" | "previous")}
+                onValueChange={(value) => setActiveTab(value as "live" | "previous" | "tickets")}
                 className="h-[500px]"
               >
-                <TabsList className="grid w-full grid-cols-2 m-4 mb-0">
-                  <TabsTrigger value="live" className="flex items-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Live Chat
+                <TabsList className="grid w-full grid-cols-3 m-4 mb-0">
+                  <TabsTrigger value="live" className="flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    Live
                     {liveConversations.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">
                         {liveConversations.length}
                       </Badge>
                     )}
                   </TabsTrigger>
-                  <TabsTrigger value="previous" className="flex items-center gap-2">
-                    <History className="w-4 h-4" />
-                    Previous Chat
+                  <TabsTrigger value="previous" className="flex items-center gap-1">
+                    <History className="w-3 h-3" />
+                    Previous
                     {previousConversations.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">
                         {previousConversations.length}
                       </Badge>
                     )}
+                  </TabsTrigger>
+                  <TabsTrigger value="tickets" className="flex items-center gap-1">
+                    <Ticket className="w-3 h-3" />
+                    Tickets
                   </TabsTrigger>
                 </TabsList>
 
@@ -580,6 +586,10 @@ export const AgentDashboard: React.FC = () => {
                       renderConversationsList(previousConversations)
                     )}
                   </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="tickets" className="mt-0 h-[450px] p-0">
+                  <TicketManagement agentId={user?.id} agentName={user?.name} />
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -719,11 +729,23 @@ export const AgentDashboard: React.FC = () => {
             ) : (
               <CardContent className="flex-1 flex items-center justify-center">
                 <div className="text-center">
-                  <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-gray-600 dark:text-gray-300">Select a conversation</p>
-                  <p className="text-sm text-muted-foreground">
-                    Choose a customer from the sidebar to start responding
-                  </p>
+                  {activeTab === "tickets" ? (
+                    <>
+                      <Ticket className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-600 dark:text-gray-300">Ticket Management</p>
+                      <p className="text-sm text-muted-foreground">
+                        View and manage customer support tickets from the sidebar
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-600 dark:text-gray-300">Select a conversation</p>
+                      <p className="text-sm text-muted-foreground">
+                        Choose a customer from the sidebar to start responding
+                      </p>
+                    </>
+                  )}
                 </div>
               </CardContent>
             )}

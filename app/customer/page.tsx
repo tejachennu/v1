@@ -14,6 +14,7 @@ import { Paperclip, X, ImageIcon, FileText, Video, Loader2 } from "lucide-react"
 import { MediaMessage } from "@/components/media/MediaMessage"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoginForm } from "@/components/auth/LoginForm"
+import { ContactForm } from "@/components/customer/ContactForm"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const SUPPORTED_TYPES = {
@@ -29,7 +30,6 @@ const SUPPORTED_TYPES = {
   "application/msword": "file",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "file",
 } as const
-
 
 export default function CustomerPage() {
   const { socket, isConnected, uploadFile, registerUser } = useSocket()
@@ -47,11 +47,33 @@ export default function CustomerPage() {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [showContactForm, setShowContactForm] = useState(true)
+  const [agentsOnline, setAgentsOnline] = useState(false)
+  const [contactInfo, setContactInfo] = useState<{
+    name: string
+    email: string
+    phone?: string
+  } | null>(null)
+
   useEffect(() => {
     if (isAuthenticated && user?.role === "agent") {
       window.location.href = "/agent"
     }
   }, [isAuthenticated, user])
+
+  useEffect(() => {
+    if (socket && isConnected) {
+      socket.emit("check_agent_availability")
+
+      socket.on("agent_availability", (data: { available: boolean }) => {
+        setAgentsOnline(data.available)
+      })
+
+      return () => {
+        socket.off("agent_availability")
+      }
+    }
+  }, [socket, isConnected])
 
   useEffect(() => {
     if (isConnected && user && registerUser) {
@@ -234,8 +256,63 @@ export default function CustomerPage() {
     }
   }
 
+  const handleStartChat = (info: { name: string; email: string; phone?: string }) => {
+    setContactInfo(info)
+    setShowContactForm(false)
+
+    // Create a temporary user session with contact info
+    const tempUser = {
+      id: uuidv4(),
+      name: info.name,
+      email: info.email,
+      phone: info.phone,
+      role: "customer" as const,
+    }
+
+    if (socket) {
+      socket.emit("customer_contact_info", tempUser)
+      dispatch(setActiveConversation(tempUser.id))
+    }
+  }
+
+  const handleCreateTicket = async (ticketInfo: {
+    name: string
+    email: string
+    phone?: string
+    description: string
+  }) => {
+    try {
+      const response = await fetch("/api/tickets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...ticketInfo,
+          status: "open",
+          createdAt: new Date().toISOString(),
+        }),
+      })
+
+      if (response.ok) {
+        // Show success message and reset form
+        alert("Ticket created successfully! Our agents will contact you soon.")
+        setShowContactForm(true)
+      } else {
+        alert("Failed to create ticket. Please try again.")
+      }
+    } catch (error) {
+      console.error("Error creating ticket:", error)
+      alert("Failed to create ticket. Please try again.")
+    }
+  }
+
   if (!isAuthenticated) {
     return <LoginForm />
+  }
+
+  if (showContactForm || !contactInfo) {
+    return <ContactForm onStartChat={handleStartChat} onCreateTicket={handleCreateTicket} agentsOnline={agentsOnline} />
   }
 
   return (
@@ -245,7 +322,7 @@ export default function CustomerPage() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border">
             <div>
               <CardTitle className="text-3xl font-bold text-primary">Customer Support</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Welcome, {user?.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">Welcome, {contactInfo?.name || user?.name}</p>
             </div>
             <Badge
               variant={isConnected ? "default" : "destructive"}
@@ -259,11 +336,11 @@ export default function CustomerPage() {
             </Badge>
           </CardHeader>
 
-<CardContent className="flex-1 flex flex-col p-6">
-  <div
-    className="overflow-y-auto space-y-3 p-4 bg-muted/30 rounded-xl border border-border scroll-smooth"
-    style={{ height: "450px"  }} // You can adjust this height as needed
-  >
+          <CardContent className="flex-1 flex flex-col p-6">
+            <div
+              className="overflow-y-auto space-y-3 p-4 bg-muted/30 rounded-xl border border-border scroll-smooth"
+              style={{ height: "450px" }}
+            >
               {!customerConversation || customerConversation.messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
