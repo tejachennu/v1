@@ -30,6 +30,7 @@ const SUPPORTED_TYPES = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "file",
 } as const
 
+
 export default function CustomerPage() {
   const { socket, isConnected, uploadFile, registerUser } = useSocket()
   const { isAuthenticated, user } = useAuth()
