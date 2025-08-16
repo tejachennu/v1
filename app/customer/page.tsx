@@ -258,8 +258,11 @@ export default function CustomerPage() {
             </Badge>
           </CardHeader>
 
-          <CardContent className="flex-1 flex flex-col p-6">
-            <div className="flex-1 overflow-y-auto space-y-3 p-4 bg-muted/30 rounded-xl border border-border scroll-smooth">
+<CardContent className="flex-1 flex flex-col p-6">
+  <div
+    className="overflow-y-auto space-y-3 p-4 bg-muted/30 rounded-xl border border-border scroll-smooth"
+    style={{ height: "450px"  }} // You can adjust this height as needed
+  >
               {!customerConversation || customerConversation.messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">

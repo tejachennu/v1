@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import io, { type Socket } from "socket.io-client"
 
-const SOCKET_URL = "http://localhost:3001"
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://194.163.45.105:3005"
 
 interface MediaFile {
   type: "image" | "video" | "file"
@@ -118,7 +118,7 @@ export const useSocket = () => {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("http://localhost:3001/api/upload", {
+      const response = await fetch(`${SOCKET_URL}/api/upload`, {
         method: "POST",
         body: formData,
       })
