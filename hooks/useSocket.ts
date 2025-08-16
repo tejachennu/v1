@@ -18,6 +18,7 @@ interface TypingUser {
   role: string
 }
 
+
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
