@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import io, { type Socket } from "socket.io-client"
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://194.163.45.105:3005"
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "https://support.consularhelpdesk.com"
 
 interface MediaFile {
   type: "image" | "video" | "file"
