@@ -7,7 +7,7 @@ const path = require("path")
 const fs = require("fs")
 const { BlobServiceClient } = require("@azure/storage-blob")
 
-const dev = process.env.NODE_ENV !== "production"
+const dev = false;
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
