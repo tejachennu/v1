@@ -14,7 +14,7 @@ export default function AgentPage() {
   }, [isAuthenticated, user])
 
   if (!isAuthenticated) {
-    return <LoginForm />
+    return <LoginForm role="agent" />
   }
 
   if (user?.role !== "agent") {

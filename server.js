@@ -26,7 +26,7 @@ app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url, true)
 
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000")
+    res.setHeader("Access-Control-Allow-Origin", "https://support.consularhelpdesk.com")
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
@@ -59,6 +59,12 @@ app.prepare().then(() => {
           const containerClient = blobServiceClient.getContainerClient(containerName)
 
           await containerClient.createIfNotExists({ access: "container" })
+
+          // Ensure the container exists
+          const exists = await containerClient.exists();
+          if (!exists) {
+            await containerClient.create({ access: "container" });
+          }
 
           const blockBlobClient = containerClient.getBlockBlobClient(blobName)
           await blockBlobClient.uploadFile(filePath)
@@ -98,7 +104,7 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: "https://support.consularhelpdesk.com",
       methods: ["GET", "POST"],
     },
   })

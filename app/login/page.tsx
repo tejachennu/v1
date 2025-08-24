@@ -18,7 +18,7 @@ export default function Home() {
   }, [isAuthenticated, user])
 
   if (!isAuthenticated) {
-    return <LoginForm role="customer" />
+    return <LoginForm role="agent" />
   }
 
   // Show loading while redirecting

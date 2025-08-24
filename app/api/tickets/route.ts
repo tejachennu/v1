@@ -1,65 +1,67 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { db } from "../../../lib/database" // Assuming this connects to your MySQL pool
 
-// In-memory store for tickets (in production, use a database)
-const tickets = new Map<
-  string,
-  {
-    id: string
-    name: string
-    email: string
-    phone?: string
-    description: string
-    status: "open" | "closed" | "in-progress"
-    createdAt: string
-    updatedAt: string
-    assignedAgent?: string
-  }
->()
-
+// GET all support tickets
 export async function GET() {
   try {
-    const allTickets = Array.from(tickets.values())
+    const sql = `
+      SELECT id, name, email, phone, description, status, assigned_agent AS assignedAgent, created_at AS createdAt, updated_at AS updatedAt
+      FROM support_tickets
+      ORDER BY created_at DESC
+    `;
+    const tickets = await db.query(sql);
+
     return NextResponse.json({
       success: true,
-      tickets: allTickets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    })
+      tickets,
+    });
   } catch (error) {
-    console.error("Error fetching tickets:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch tickets" }, { status: 500 })
+    console.error("Error fetching tickets:", error);
+    return NextResponse.json({ success: false, error: "Failed to fetch tickets" }, { status: 500 });
   }
 }
 
+// POST a new support ticket
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, description } = await request.json()
+    const { name, email, phone, description } = await request.json();
 
     if (!name || !email || !description) {
-      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    const ticketId = `ticket_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const ticket = {
-      id: ticketId,
-      name,
-      email,
-      phone,
-      description,
-      status: "open" as const,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const status = "open";
 
-    tickets.set(ticketId, ticket)
+    const sql = `
+      INSERT INTO support_tickets (name, email, phone, description, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const params = [name, email, phone ?? null, description, status, createdAt, updatedAt];
+
+    const result: any = await db.query(sql, params);
 
     return NextResponse.json({
       success: true,
-      ticket,
-    })
+      ticket: {
+        id: result.insertId,
+        name,
+        email,
+        phone,
+        description,
+        status,
+        createdAt,
+        updatedAt,
+      },
+    });
   } catch (error) {
-    console.error("Error creating ticket:", error)
-    return NextResponse.json({ success: false, error: "Failed to create ticket" }, { status: 500 })
+    console.error("Error creating ticket:", error);
+    return NextResponse.json({ success: false, error: "Failed to create ticket" }, { status: 500 });
   }
 }
+
+// In-memory ticket storage for PATCH example (replace with DB in production)
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -69,19 +71,45 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Ticket ID is required" }, { status: 400 })
     }
 
-    const ticket = tickets.get(ticketId)
-    if (!ticket) {
+    // Prepare dynamic fields to update
+    const updates: string[] = []
+    const params: any[] = []
+
+    if (status) {
+      updates.push("status = ?")
+      params.push(status)
+    }
+
+    if (assignedAgent) {
+      updates.push("assigned_agent = ?")
+      params.push(assignedAgent)
+    }
+
+    // Always update the timestamp
+    updates.push("updated_at = ?")
+    params.push(new Date())
+
+    params.push(ticketId)
+
+    const sql = `
+      UPDATE support_tickets
+      SET ${updates.join(", ")}
+      WHERE id = ?
+    `
+
+    const result: any = await db.query(sql, params)
+
+    if (result.affectedRows === 0) {
       return NextResponse.json({ success: false, error: "Ticket not found" }, { status: 404 })
     }
 
-    const updatedTicket = {
-      ...ticket,
-      ...(status && { status }),
-      ...(assignedAgent && { assignedAgent }),
-      updatedAt: new Date().toISOString(),
-    }
-
-    tickets.set(ticketId, updatedTicket)
+    // Fetch the updated ticket
+    const [updatedTicket]: any = await db.query(
+      `SELECT id, name, email, phone, description, status, assigned_agent AS assignedAgent, created_at AS createdAt, updated_at AS updatedAt
+       FROM support_tickets
+       WHERE id = ?`,
+      [ticketId]
+    )
 
     return NextResponse.json({
       success: true,
