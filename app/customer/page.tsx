@@ -307,11 +307,11 @@ export default function CustomerPage() {
   }
 
   if (!isAuthenticated) {
-    return <LoginForm />
+    return <LoginForm role="customer" />
   }
 
   if (showContactForm || !contactInfo) {
-    return <ContactForm onStartChat={handleStartChat} onCreateTicket={handleCreateTicket} agentsOnline={agentsOnline} />
+    return <ContactForm onStartChat={handleStartChat} onCreateTicket={handleCreateTicket} />
   }
 
   return (

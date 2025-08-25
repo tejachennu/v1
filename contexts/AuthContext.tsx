@@ -73,7 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("chatUser", JSON.stringify(newUser))
         return true
       } else {
-        // Customer login (simple local storage)
         const newUser: User = {
           id: `customer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name,

@@ -174,7 +174,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ role }) => {
               </form>
 
               <hr className="my-4" />
-
+{/* 
               <form onSubmit={handleAgentRegister} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium text-gray-700">
@@ -230,7 +230,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ role }) => {
                 >
                   {isLoading ? "Registering..." : "Create Account"}
                 </Button>
-              </form>
+              </form> */}
             </div>
           )}
         </CardContent>

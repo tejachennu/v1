@@ -56,6 +56,10 @@ export const AgentDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"live" | "previous" | "tickets">("live")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const notificationSound = typeof window !== "undefined"
+  ? new Audio("/arpeggio-467.mp3")
+  : null
+
 
   const conversationsList = useMemo(() => {
     console.log("[v0] AgentDashboard - conversations updated:", Object.keys(conversations).length)
@@ -126,6 +130,11 @@ export const AgentDashboard: React.FC = () => {
       timestamp?: string
     }) => {
       console.log("[v0] Agent received customer message:", data)
+      if (notificationSound) {
+  notificationSound.currentTime = 0
+  notificationSound.play()
+}
+
 
       const message = {
         id: uuidv4(),
