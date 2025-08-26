@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { LoginForm } from "@/components/auth/LoginForm"
 import { ContactForm } from "@/components/customer/ContactForm"
 
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const SUPPORTED_TYPES = {
   "image/jpeg": "image",
@@ -32,7 +33,7 @@ const SUPPORTED_TYPES = {
 
 export default function CustomerPage() {
   const { socket, isConnected, uploadFile, registerUser } = useSocket()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user ,login } = useAuth()
   const dispatch = useAppDispatch()
 
   const conversations = useAppSelector((state) => state.chat.conversations)
@@ -45,6 +46,7 @@ export default function CustomerPage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
 
   const [showContactForm, setShowContactForm] = useState(true)
   const [agentsOnline, setAgentsOnline] = useState(false)
@@ -255,9 +257,13 @@ export default function CustomerPage() {
     }
   }
 
-  const handleStartChat = (info: { name: string; email: string; phone?: string }) => {
+  const handleStartChat = async(info: { name: string; email: string; phone?: string }) => {
+    
+    console.log("Customer provided contact info:", info)
+
     setContactInfo(info)
     setShowContactForm(false)
+    console.log("Contact Info set, proceeding to login as customer")  
 
     // Create a temporary user session with contact info
     const tempUser = {
@@ -267,6 +273,16 @@ export default function CustomerPage() {
       phone: info.phone,
       role: "customer" as const,
     }
+
+    const success = await login(tempUser.name.trim(), "customer")
+    console.log("Login success:", success)
+    
+    if (!success) {
+      alert("Failed to start chat. Please try again.")
+      setShowContactForm(true)
+      return
+    }
+  
 
     if (socket) {
       socket.emit("customer_contact_info", tempUser)
@@ -306,11 +322,13 @@ export default function CustomerPage() {
     }
   }
 
-  if (!isAuthenticated) {
-    return <LoginForm role="customer" />
-  }
+  // if (!isAuthenticated) {
+  //   return <LoginForm role="customer" />
+  // }
 
-  if (showContactForm || !contactInfo) {
+  if (showContactForm || !contactInfo || !isAuthenticated) {
+      
+
     return <ContactForm onStartChat={handleStartChat} onCreateTicket={handleCreateTicket} />
   }
 
