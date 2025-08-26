@@ -46,6 +46,10 @@ export default function CustomerPage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+    const notificationSound = typeof window !== "undefined"
+  ? new Audio("/arpeggio-467.mp3")
+  : null
+
   
 
   const [showContactForm, setShowContactForm] = useState(true)
@@ -97,7 +101,10 @@ export default function CustomerPage() {
       timestamp?: string
     }) => {
       console.log("[v0] Customer received agent message:", data)
-
+ if (notificationSound) {
+  notificationSound.currentTime = 0
+  notificationSound.play()
+}
       const message = {
         id: uuidv4(),
         text: data.text || "",
@@ -326,8 +333,7 @@ export default function CustomerPage() {
   //   return <LoginForm role="customer" />
   // }
 
-  if (showContactForm || !contactInfo || !isAuthenticated) {
-      
+  if (!isAuthenticated) {
 
     return <ContactForm onStartChat={handleStartChat} onCreateTicket={handleCreateTicket} />
   }
@@ -349,11 +355,15 @@ export default function CustomerPage() {
             </div>
           </div>
           <Badge
-            variant={agentsOnline ? "default" : "secondary"}
-            className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded"
-          >
-            {agentsOnline ? "Agent Available" : "Leave Message"}
-          </Badge>
+                      variant={agentsOnline ? "default" : "secondary"}
+                      onClick={() => {
+                        localStorage.clear();
+                        window.location.reload();
+                      }}
+                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded cursor-pointer"
+                    >
+                      {"End Session"}
+                    </Badge>
         </div>
 
         {/* Messages */}
